@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { getCurrentUser } from '@/lib/storage';
-import { saveVisitEntry, getVisitEntries } from '@/lib/storage';
+import { saveVisitEntry, getVisitEntries, getTravelPlans, getTravelPlanEntriesByPlanId, getTravelPlanEntryById, saveTravelPlanEntry } from '@/lib/storage';
 import { getPersonaById, getTeamLeaderForEngineer, getVerticalForLeader } from '@/lib/personas';
 import { predefinedOptions } from '@/lib/personas';
-import { VisitEntry, ContactPerson, User } from '@/types';
+import { VisitEntry, ContactPerson, User, TravelPlanEntry, TravelPlan } from '@/types';
 import { formatDate, getDayOfWeek, generateId, validateEmail, validateMobile } from '@/lib/utils';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowLeft, Plus, X, Calendar, Link as LinkIcon, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/components/ToastProvider';
 
@@ -42,6 +42,9 @@ export default function NewVisitPage() {
   const [contactPersons, setContactPersons] = useState<ContactPerson[]>([
     { id: generateId(), name: '', designation: '', mobile: '', email: '' },
   ]);
+  const [selectedPlanEntryId, setSelectedPlanEntryId] = useState<string>('');
+  const [availablePlanEntries, setAvailablePlanEntries] = useState<TravelPlanEntry[]>([]);
+  const [showPlanLinkModal, setShowPlanLinkModal] = useState(false);
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -50,6 +53,19 @@ export default function NewVisitPage() {
       return;
     }
     setUser(currentUser);
+
+    // Load available travel plan entries for linking
+    if (currentUser.role === 'sales_engineer') {
+      const plans = getTravelPlans().filter(p => p.salesEngineerId === currentUser.id && (p.status === 'approved' || p.status === 'active'));
+      const allEntries: TravelPlanEntry[] = [];
+      plans.forEach(plan => {
+        const entries = getTravelPlanEntriesByPlanId(plan.id);
+        // Only show entries that haven't been converted yet
+        const unconvertedEntries = entries.filter(e => !e.visitReportId && (e.status === 'completed' || e.status === 'in-progress' || e.status === 'planned'));
+        allEntries.push(...unconvertedEntries);
+      });
+      setAvailablePlanEntries(allEntries);
+    }
   }, [router]);
 
   const handleInputChange = (field: string, value: string) => {
@@ -81,6 +97,25 @@ export default function NewVisitPage() {
   const removeContactPerson = (index: number) => {
     if (contactPersons.length > 1) {
       setContactPersons((prev) => prev.filter((_, i) => i !== index));
+    }
+  };
+
+  const handleLinkPlanEntry = (entryId: string) => {
+    const entry = getTravelPlanEntryById(entryId);
+    if (entry) {
+      // Pre-fill form data from travel plan entry
+      setFormData(prev => ({
+        ...prev,
+        dateOfVisit: entry.date,
+        companyName: entry.customerName,
+        cityArea: entry.areaRegion,
+        state: entry.toLocation,
+        purposeOfMeeting: entry.purpose,
+        remarks: entry.notes || '',
+      }));
+      setSelectedPlanEntryId(entryId);
+      setShowPlanLinkModal(false);
+      toast.showToast('Travel plan entry linked and form pre-filled', 'success');
     }
   };
 
@@ -150,12 +185,27 @@ export default function NewVisitPage() {
         status: formData.status || 'Open',
         result: formData.result,
         closureDate: formData.closureDate,
+        travelPlanEntryId: selectedPlanEntryId || undefined,
+        isFromPlan: !!selectedPlanEntryId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
       const success = saveVisitEntry(visitEntry);
       if (success) {
+        // If linked to a plan entry, update the plan entry
+        if (selectedPlanEntryId) {
+          const planEntry = getTravelPlanEntryById(selectedPlanEntryId);
+          if (planEntry) {
+            const updatedEntry = {
+              ...planEntry,
+              visitReportId: visitEntry.id,
+              status: 'converted' as const,
+              updatedAt: new Date().toISOString(),
+            };
+            saveTravelPlanEntry(updatedEntry);
+          }
+        }
         toast.showToast('Visit report created successfully', 'success');
       } else {
         toast.showToast('Failed to save visit report. Storage may be full.', 'error');
@@ -197,6 +247,33 @@ export default function NewVisitPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
+            {/* Link to Travel Plan */}
+            {user.role === 'sales_engineer' && availablePlanEntries.length > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-900">
+                      {selectedPlanEntryId ? 'Linked to Travel Plan' : 'Link to Travel Plan Entry'}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPlanLinkModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                  >
+                    <LinkIcon className="w-4 h-4" />
+                    {selectedPlanEntryId ? 'Change Link' : 'Select Plan Entry'}
+                  </button>
+                </div>
+                {selectedPlanEntryId && (
+                  <p className="text-xs text-blue-700 mt-2">
+                    Form will be pre-filled from the selected travel plan entry
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Visit Information */}
             <section>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Visit Information</h2>
@@ -624,6 +701,61 @@ export default function NewVisitPage() {
             </div>
           </form>
         </div>
+
+        {/* Travel Plan Link Modal */}
+        {showPlanLinkModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-semibold text-gray-900">Link to Travel Plan Entry</h2>
+                  <button
+                    onClick={() => setShowPlanLinkModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Select a travel plan entry to pre-fill the visit report form
+                </p>
+              </div>
+              <div className="p-6">
+                {availablePlanEntries.length === 0 ? (
+                  <p className="text-gray-600 text-center py-8">No available travel plan entries</p>
+                ) : (
+                  <div className="space-y-3">
+                    {availablePlanEntries.map((entry) => (
+                      <button
+                        key={entry.id}
+                        type="button"
+                        onClick={() => handleLinkPlanEntry(entry.id)}
+                        className={`w-full text-left p-4 border rounded-lg hover:bg-gray-50 transition-colors ${
+                          selectedPlanEntryId === entry.id ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-gray-900">{entry.customerName}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {entry.date} • {entry.purpose}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {entry.fromLocation} → {entry.toLocation} • {entry.areaRegion}
+                            </div>
+                          </div>
+                          {selectedPlanEntryId === entry.id && (
+                            <CheckCircle className="w-5 h-5 text-blue-600" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

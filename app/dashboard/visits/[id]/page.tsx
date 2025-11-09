@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { getCurrentUser } from '@/lib/storage';
-import { getVisitEntries, saveVisitEntry, deleteVisitEntry } from '@/lib/storage';
+import { getVisitEntries, saveVisitEntry, deleteVisitEntry, getTravelPlanEntryById } from '@/lib/storage';
 import { VisitEntry, User } from '@/types';
 import { formatDate, formatCurrency, getDayOfWeek, generateId } from '@/lib/utils';
-import { ArrowLeft, Edit, Check, X, Mail, Phone, MapPin, Calendar, Building2, DollarSign, User as UserIcon, Trash2, Copy, Printer, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Check, X, Mail, Phone, MapPin, Calendar, Building2, DollarSign, User as UserIcon, Trash2, Copy, Printer, AlertCircle, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/components/ToastProvider';
 import ConfirmDialog from '@/components/ConfirmDialog';
@@ -191,8 +191,25 @@ export default function VisitDetailPage() {
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Visit Report Details</h1>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-2xl font-semibold text-gray-900">Visit Report Details</h1>
+                {displayVisit.isFromPlan && (
+                  <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    From Travel Plan
+                  </span>
+                )}
+              </div>
               <p className="text-gray-600 mt-1">{displayVisit.companyName}</p>
+              {displayVisit.travelPlanEntryId && (
+                <a
+                  href={`/dashboard/plans?entryId=${displayVisit.travelPlanEntryId}`}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 mt-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  View Original Travel Plan
+                </a>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {!isEditing && (

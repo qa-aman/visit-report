@@ -69,6 +69,14 @@ export default function Layout({ children }: LayoutProps) {
                 {user.role === 'sales_engineer' && (
                   <>
                     <a
+                      href="/dashboard/plans"
+                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      aria-label="Travel Plans"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span>Travel Plans</span>
+                    </a>
+                    <a
                       href="/dashboard/visits/new"
                       className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
                       aria-label="Create new visit report"
@@ -87,13 +95,23 @@ export default function Layout({ children }: LayoutProps) {
                   </>
                 )}
                 {user.role === 'team_leader' && (
-                  <a
-                    href="/dashboard/team"
-                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span>Team Reports</span>
-                  </a>
+                  <>
+                    <a
+                      href="/dashboard/team"
+                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Team Reports</span>
+                    </a>
+                    <a
+                      href="/dashboard/plans/approve"
+                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      aria-label="Approve travel plans"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      <span>Approve Plans</span>
+                    </a>
+                  </>
                 )}
                 {user.role === 'admin' && (
                   <a
