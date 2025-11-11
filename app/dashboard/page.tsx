@@ -204,122 +204,123 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <div className="space-y-8">
+      <div className="space-y-2">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-900">
               Welcome back, {user.name}
             </h1>
-            <p className="text-gray-600 mt-1">Here's your visit report overview</p>
+            <p className="text-xs text-gray-600 mt-0.5">Visit report overview</p>
           </div>
           {user.role === 'sales_engineer' && (
             <Link
               href="/dashboard/visits/new"
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center gap-1 px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              <span>New Visit Report</span>
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">New Visit</span>
+              <span className="sm:hidden">New</span>
             </Link>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           <button
             onClick={() => setActiveFilter(activeFilter === 'all' ? null : 'all')}
-            className={`bg-white rounded-2xl p-6 shadow-sm border transition-all text-left ${
+            className={`bg-white rounded-lg p-2 shadow-sm border transition-all text-left ${
               activeFilter === 'all' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Visits</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs text-gray-600">Total Visits</p>
+                <p className="text-lg sm:text-xl font-semibold text-gray-900 mt-0.5">
                   {stats.totalVisits}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-xl">
-                <Calendar className="w-6 h-6 text-blue-600" />
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <Calendar className="w-4 h-4 text-blue-600" />
               </div>
             </div>
           </button>
 
           <button
             onClick={() => setActiveFilter(activeFilter === 'byValue' ? null : 'byValue')}
-            className={`bg-white rounded-2xl p-6 shadow-sm border transition-all text-left ${
+            className={`bg-white rounded-lg p-2 shadow-sm border transition-all text-left ${
               activeFilter === 'byValue' ? 'border-green-500 ring-2 ring-green-200' : 'border-gray-200 hover:border-green-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Opportunity</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs text-gray-600">Total Opportunity</p>
+                <p className="text-lg sm:text-xl font-semibold text-gray-900 mt-0.5">
                   ₹{formatCurrency(stats.totalValue)}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-xl">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="p-1.5 bg-green-100 rounded-lg">
+                <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
             </div>
           </button>
 
           <button
             onClick={() => setActiveFilter(activeFilter === 'satisfied' ? null : 'satisfied')}
-            className={`bg-white rounded-2xl p-6 shadow-sm border transition-all text-left ${
+            className={`bg-white rounded-lg p-2 shadow-sm border transition-all text-left ${
               activeFilter === 'satisfied' ? 'border-purple-500 ring-2 ring-purple-200' : 'border-gray-200 hover:border-purple-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Satisfied Visits</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs text-gray-600">Satisfied</p>
+                <p className="text-lg sm:text-xl font-semibold text-gray-900 mt-0.5">
                   {stats.satisfied}
                 </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-xl">
-                <Building2 className="w-6 h-6 text-purple-600" />
+              <div className="p-1.5 bg-purple-100 rounded-lg">
+                <Building2 className="w-4 h-4 text-purple-600" />
               </div>
             </div>
           </button>
 
           <button
             onClick={() => setActiveFilter(activeFilter === 'thisMonth' ? null : 'thisMonth')}
-            className={`bg-white rounded-2xl p-6 shadow-sm border transition-all text-left ${
+            className={`bg-white rounded-lg p-2 shadow-sm border transition-all text-left ${
               activeFilter === 'thisMonth' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-gray-200 hover:border-orange-300'
             }`}
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">This Month</p>
-                <p className="text-3xl font-semibold text-gray-900 mt-2">
+                <p className="text-xs text-gray-600">This Month</p>
+                <p className="text-lg sm:text-xl font-semibold text-gray-900 mt-0.5">
                   {stats.thisMonth}
                 </p>
               </div>
-              <div className="p-3 bg-orange-100 rounded-xl">
-                <Calendar className="w-6 h-6 text-orange-600" />
+              <div className="p-1.5 bg-orange-100 rounded-lg">
+                <Calendar className="w-4 h-4 text-orange-600" />
               </div>
             </div>
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" aria-hidden="true" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
             <input
               type="text"
-              placeholder="Search by company, contact person, purpose, or product..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-7 sm:pl-9 pr-7 sm:pr-9 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               aria-label="Search visits"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 aria-label="Clear search"
               >
-                <X className="w-5 h-5" />
+                <X className="w-3 h-3 sm:w-4 sm:h-4" />
               </button>
             )}
           </div>
@@ -336,10 +337,10 @@ export default function DashboardPage() {
         {(activeFilter || searchQuery || Object.values(advancedFilters).some(v => 
           typeof v === 'string' ? v : v.start || v.end
         )) && (
-          <div className="flex items-center gap-2 text-sm flex-wrap">
-            <span className="text-gray-600">Filtered by:</span>
+          <div className="flex items-center gap-1.5 text-xs flex-wrap">
+            <span className="text-gray-600">Filtered:</span>
             {activeFilter && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-medium">
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-full font-medium">
                 {activeFilter === 'all' ? 'All Visits' :
                  activeFilter === 'satisfied' ? 'Satisfied Visits' :
                  activeFilter === 'thisMonth' ? 'This Month' :
@@ -347,29 +348,29 @@ export default function DashboardPage() {
               </span>
             )}
             {searchQuery && (
-              <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full font-medium">
-                Search: "{searchQuery}"
+              <span className="px-2 py-0.5 bg-purple-100 text-purple-800 rounded-full font-medium">
+                "{searchQuery}"
               </span>
             )}
             {advancedFilters.dateRange.start && (
-              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full font-medium">
+              <span className="px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-medium">
                 Date: {formatDate(advancedFilters.dateRange.start)}
                 {advancedFilters.dateRange.end && ` - ${formatDate(advancedFilters.dateRange.end)}`}
               </span>
             )}
             {advancedFilters.state && (
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium">
+              <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-medium">
                 State: {advancedFilters.state}
               </span>
             )}
             {advancedFilters.city && (
-              <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium">
+              <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded-full font-medium">
                 City: {advancedFilters.city}
               </span>
             )}
             {advancedFilters.product && (
-              <span className="px-3 py-1 bg-pink-100 text-pink-800 rounded-full font-medium">
-                Product: {advancedFilters.product}
+              <span className="px-2 py-0.5 bg-pink-100 text-pink-800 rounded-full font-medium">
+                {advancedFilters.product}
               </span>
             )}
             <button
@@ -384,20 +385,20 @@ export default function DashboardPage() {
                   outcome: '',
                 });
               }}
-              className="text-blue-600 hover:text-blue-700 underline"
+              className="text-blue-600 hover:text-blue-700 underline text-xs"
               aria-label="Clear all filters"
             >
-              Clear all filters
+              Clear
             </button>
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900">Visit Reports</h2>
-            <span className="text-sm text-gray-500">
-              Showing {paginatedVisits.length} of {filteredVisits.length} visits
-              {filteredVisits.length !== allVisits.length && ` (${allVisits.length} total)`}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-2 border-b border-gray-200 flex justify-between items-center">
+            <h2 className="text-sm font-semibold text-gray-900">Visit Reports</h2>
+            <span className="text-xs text-gray-500">
+              {paginatedVisits.length}/{filteredVisits.length}
+              {filteredVisits.length !== allVisits.length && ` (${allVisits.length})`}
             </span>
           </div>
           <div className="overflow-x-auto">
@@ -418,19 +419,19 @@ export default function DashboardPage() {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Company
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Purpose
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Outcome
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Value
                     </th>
                   </tr>
@@ -451,18 +452,19 @@ export default function DashboardPage() {
                       }}
                       aria-label={`View visit report for ${visit.companyName}`}
                     >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900">
                         {formatDate(visit.dateOfVisit)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {visit.companyName}
+                      <td className="px-2 py-1.5 whitespace-nowrap">
+                        <div className="text-xs font-medium text-gray-900">{visit.companyName}</div>
+                        <div className="text-xs text-gray-500">{visit.cityArea}, {visit.state}</div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-500">
                         {visit.purposeOfMeeting}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-1.5 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
                             visit.visitOutcome === 'Satisfied'
                               ? 'bg-green-100 text-green-800'
                               : visit.visitOutcome === 'Dissatisfied'
@@ -473,10 +475,8 @@ export default function DashboardPage() {
                           {visit.visitOutcome}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {visit.potentialSaleValue
-                          ? `₹${visit.potentialSaleValue}`
-                          : '-'}
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs font-medium text-gray-900">
+                        {visit.potentialSaleValue ? `₹${visit.potentialSaleValue}` : '-'}
                       </td>
                     </tr>
                   ))}
@@ -487,20 +487,20 @@ export default function DashboardPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="p-6 border-t border-gray-200 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
+            <div className="p-2 border-t border-gray-200 flex items-center justify-between">
+              <div className="text-xs text-gray-600">
+                Page {currentPage}/{totalPages}
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Previous page"
                 >
-                  Previous
+                  Prev
                 </button>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -516,7 +516,7 @@ export default function DashboardPage() {
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`px-3 py-1 rounded-lg transition-colors ${
+                        className={`px-1.5 py-0.5 text-xs rounded transition-colors ${
                           currentPage === pageNum
                             ? 'bg-blue-600 text-white'
                             : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Next page"
                 >
                   Next

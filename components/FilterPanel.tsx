@@ -60,34 +60,34 @@ export default function FilterPanel({
     filters.outcome;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+        className="w-full p-2 flex items-center justify-between hover:bg-gray-50 transition-colors"
         aria-expanded={isOpen}
         aria-label="Toggle filter panel"
       >
-        <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-gray-600" />
-          <span className="font-medium text-gray-900">Advanced Filters</span>
+        <div className="flex items-center gap-1.5">
+          <Filter className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
+          <span className="text-xs sm:text-sm font-medium text-gray-900">Filters</span>
           {hasActiveFilters && (
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+            <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
               Active
             </span>
           )}
         </div>
-        <span className="text-gray-500">{isOpen ? '−' : '+'}</span>
+        <span className="text-gray-500 text-xs">{isOpen ? '−' : '+'}</span>
       </button>
 
       {isOpen && (
-        <div className="p-4 border-t border-gray-200 space-y-4">
+        <div className="p-2 border-t border-gray-200 space-y-2">
           {/* Date Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
+            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
               Date Range
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <input
                   type="date"
@@ -98,7 +98,7 @@ export default function FilterPanel({
                       start: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   aria-label="Start date"
                 />
               </div>
@@ -112,7 +112,7 @@ export default function FilterPanel({
                       end: e.target.value,
                     })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   aria-label="End date"
                 />
               </div>
@@ -121,14 +121,14 @@ export default function FilterPanel({
 
           {/* State Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <MapPin className="w-3 h-3" />
               State
             </label>
             <select
               value={filters.state}
               onChange={(e) => handleFilterChange('state', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               aria-label="Filter by state"
             >
               <option value="">All States</option>
@@ -142,11 +142,11 @@ export default function FilterPanel({
 
           {/* City Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">City / Area</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">City / Area</label>
             <select
               value={filters.city}
               onChange={(e) => handleFilterChange('city', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:text-gray-500"
               aria-label="Filter by city"
               disabled={!filters.state}
             >
@@ -163,14 +163,14 @@ export default function FilterPanel({
 
           {/* Product/Service Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-              <Package className="w-4 h-4" />
+            <label className="block text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
+              <Package className="w-3 h-3" />
               Product / Service
             </label>
             <select
               value={filters.product}
               onChange={(e) => handleFilterChange('product', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               aria-label="Filter by product or service"
             >
               <option value="">All Products</option>
@@ -184,11 +184,11 @@ export default function FilterPanel({
 
           {/* Outcome Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Visit Outcome</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Visit Outcome</label>
             <select
               value={filters.outcome}
               onChange={(e) => handleFilterChange('outcome', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               aria-label="Filter by visit outcome"
             >
               <option value="">All Outcomes</option>
@@ -202,11 +202,11 @@ export default function FilterPanel({
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
               aria-label="Clear all filters"
             >
-              <X className="w-4 h-4" />
-              <span>Clear All Filters</span>
+              <X className="w-3 h-3" />
+              <span>Clear Filters</span>
             </button>
           )}
         </div>

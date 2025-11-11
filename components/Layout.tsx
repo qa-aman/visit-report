@@ -52,16 +52,16 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4">
+          <div className="flex justify-between items-center h-12">
             <div className="flex items-center gap-8">
-              <h1 className="text-xl font-semibold text-gray-900">
+              <h1 className="text-sm font-semibold text-gray-900">
                 Visit Report System
               </h1>
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <a
                   href="/dashboard"
-                  className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                  className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                 >
                   <Home className="w-4 h-4" />
                   <span>Dashboard</span>
@@ -70,7 +70,7 @@ export default function Layout({ children }: LayoutProps) {
                   <>
                     <a
                       href="/dashboard/plans"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                       aria-label="Travel Plans"
                     >
                       <Calendar className="w-4 h-4" />
@@ -78,7 +78,7 @@ export default function Layout({ children }: LayoutProps) {
                     </a>
                     <a
                       href="/dashboard/visits/new"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                       aria-label="Create new visit report"
                     >
                       <FileText className="w-4 h-4" />
@@ -86,7 +86,7 @@ export default function Layout({ children }: LayoutProps) {
                     </a>
                     <a
                       href="/dashboard/reports/monthly"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                       aria-label="Monthly reports"
                     >
                       <Calendar className="w-4 h-4" />
@@ -98,14 +98,14 @@ export default function Layout({ children }: LayoutProps) {
                   <>
                     <a
                       href="/dashboard/team"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                     >
                       <Users className="w-4 h-4" />
                       <span>Team Reports</span>
                     </a>
                     <a
                       href="/dashboard/plans/approve"
-                      className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                      className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                       aria-label="Approve travel plans"
                     >
                       <Calendar className="w-4 h-4" />
@@ -116,7 +116,7 @@ export default function Layout({ children }: LayoutProps) {
                 {user.role === 'admin' && (
                   <a
                     href="/dashboard/admin"
-                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+                    className="flex items-center gap-1 text-xs sm:text-sm text-gray-700 hover:text-gray-900 transition-colors"
                   >
                     <Settings className="w-4 h-4" />
                     <span>Admin</span>
@@ -124,23 +124,23 @@ export default function Layout({ children }: LayoutProps) {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">{user.name}</div>
+            <div className="flex items-center gap-2">
+              <div className="text-right hidden sm:block">
+                <div className="text-xs font-medium text-gray-900">{user.name}</div>
                 <div className="text-xs text-gray-500">{getRoleLabel(user.role)}</div>
               </div>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-xs text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <LogOut className="w-4 h-4" />
-                <span>Logout</span>
+                <LogOut className="w-3 h-3" />
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-2 sm:px-3 lg:px-4 py-2">
         {children}
       </main>
     </div>

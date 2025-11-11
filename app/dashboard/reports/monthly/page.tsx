@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { getCurrentUser } from '@/lib/storage';
-import { getVisitEntries } from '@/lib/storage';
+import { getVisitEntries, getTravelPlans, getTravelPlanEntries } from '@/lib/storage';
 import { initializeDummyData } from '@/lib/initializeData';
-import { VisitEntry, User } from '@/types';
+import { VisitEntry, User, TravelPlan, TravelPlanEntry } from '@/types';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { ArrowLeft, Download, Printer, Calendar } from 'lucide-react';
 import Link from 'next/link';
@@ -21,12 +21,20 @@ export default function MonthlyReportPage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
   const [visits, setVisits] = useState<VisitEntry[]>([]);
+  const [planData, setPlanData] = useState<{ plan: TravelPlan | null; entries: TravelPlanEntry[] }>({
+    plan: null,
+    entries: [],
+  });
   const [stats, setStats] = useState({
     totalVisits: 0,
     totalValue: 0,
     satisfied: 0,
     dissatisfied: 0,
     needImprovement: 0,
+    plannedVisits: 0,
+    actualVisits: 0,
+    plannedValue: 0,
+    actualValue: 0,
   });
 
   useEffect(() => {
@@ -48,6 +56,26 @@ export default function MonthlyReportPage() {
     );
 
     const [year, month] = selectedMonth.split('-').map(Number);
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthName = monthNames[month - 1];
+
+    // Get travel plan for this month
+    const allPlans = getTravelPlans();
+    const plan = allPlans.find(
+      (p) => p.salesEngineerId === user.id && 
+             p.month === monthName && 
+             p.year === year &&
+             (p.status === 'approved' || p.status === 'active' || p.status === 'completed')
+    );
+    
+    let planEntries: TravelPlanEntry[] = [];
+    if (plan) {
+      const allPlanEntries = getTravelPlanEntries();
+      planEntries = allPlanEntries.filter((e) => e.travelPlanId === plan.id);
+    }
+    setPlanData({ plan: plan || null, entries: planEntries });
+
     const filtered = userVisits.filter((v) => {
       const visitDate = new Date(v.dateOfVisit);
       return (
@@ -65,12 +93,24 @@ export default function MonthlyReportPage() {
       return sum + value;
     }, 0);
 
+    // Calculate planned vs actual
+    const plannedVisits = planEntries.length;
+    const actualVisits = filtered.length;
+    const plannedValue = planEntries.reduce((sum, e) => {
+      // Estimate value from plan entries (if available in notes or default)
+      return sum + 0; // Placeholder - actual value would come from plan if stored
+    }, 0);
+
     setStats({
       totalVisits: filtered.length,
       totalValue,
       satisfied: filtered.filter((v) => v.visitOutcome === 'Satisfied').length,
       dissatisfied: filtered.filter((v) => v.visitOutcome === 'Dissatisfied').length,
       needImprovement: filtered.filter((v) => v.visitOutcome === 'Need for Improvement').length,
+      plannedVisits,
+      actualVisits,
+      plannedValue,
+      actualValue: totalValue,
     });
   }, [user, selectedMonth]);
 
@@ -122,24 +162,24 @@ export default function MonthlyReportPage() {
       <div className="max-w-6xl mx-auto">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="inline-flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900 mb-2 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to Dashboard</span>
+          <ArrowLeft className="w-3 h-3" />
+          <span>Back</span>
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="p-2 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">Monthly Visit Report</h1>
-                <p className="text-gray-600 mt-1">Generate and export monthly visit reports</p>
+                <h1 className="text-base sm:text-lg font-semibold text-gray-900">Monthly Visit Report</h1>
+                <p className="text-xs text-gray-600 mt-0.5">Generate and export monthly reports</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                  className="px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   aria-label="Select month"
                 >
                   {Array.from({ length: 12 }, (_, i) => {
@@ -157,58 +197,91 @@ export default function MonthlyReportPage() {
                 </select>
                 <button
                   onClick={handleExport}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                   aria-label="Export report"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Export</span>
+                  <Download className="w-3 h-3" />
+                  <span className="hidden sm:inline">Export</span>
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   aria-label="Print report"
                 >
-                  <Printer className="w-4 h-4" />
-                  <span>Print</span>
+                  <Printer className="w-3 h-3" />
+                  <span className="hidden sm:inline">Print</span>
                 </button>
               </div>
             </div>
 
             {/* Report Header */}
-            <div className="bg-gray-50 rounded-xl p-6 mb-6 print:bg-white">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-50 rounded-lg p-2 mb-2 print:bg-white">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <div>
-                  <p className="text-sm text-gray-600">Report Period</p>
-                  <p className="font-semibold text-gray-900">{reportPeriod}</p>
+                  <p className="text-xs text-gray-600">Report Period</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">{reportPeriod}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Sales Engineer</p>
-                  <p className="font-semibold text-gray-900">{user.name}</p>
+                  <p className="text-xs text-gray-600">Sales Engineer</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">{user.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Visits</p>
-                  <p className="font-semibold text-gray-900">{stats.totalVisits}</p>
+                  <p className="text-xs text-gray-600">Total Visits</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">{stats.totalVisits}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Total Opportunity</p>
-                  <p className="font-semibold text-gray-900">₹{formatCurrency(stats.totalValue)}</p>
+                  <p className="text-xs text-gray-600">Total Opportunity</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900">₹{formatCurrency(stats.totalValue)}</p>
                 </div>
               </div>
             </div>
 
+            {/* Planned vs Actual */}
+            {planData.plan && (
+              <div className="bg-blue-50 rounded-lg p-2 mb-2">
+                <h3 className="text-xs font-semibold text-gray-900 mb-1">Planned vs Actual</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5">
+                  <div>
+                    <p className="text-xs text-gray-600">Planned Visits</p>
+                    <p className="text-sm font-semibold text-gray-900">{stats.plannedVisits}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Actual Visits</p>
+                    <p className="text-sm font-semibold text-gray-900">{stats.actualVisits}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Variance</p>
+                    <p className={`text-sm font-semibold ${
+                      stats.actualVisits >= stats.plannedVisits ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {stats.actualVisits >= stats.plannedVisits ? '+' : ''}{stats.actualVisits - stats.plannedVisits}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-600">Completion Rate</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {stats.plannedVisits > 0 
+                        ? Math.round((stats.actualVisits / stats.plannedVisits) * 100) 
+                        : 0}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-green-50 rounded-xl p-4">
-                <p className="text-sm text-gray-600">Satisfied</p>
-                <p className="text-2xl font-semibold text-green-800">{stats.satisfied}</p>
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
+              <div className="bg-green-50 rounded-lg p-2">
+                <p className="text-xs text-gray-600">Satisfied</p>
+                <p className="text-sm font-semibold text-green-800">{stats.satisfied}</p>
               </div>
-              <div className="bg-red-50 rounded-xl p-4">
-                <p className="text-sm text-gray-600">Dissatisfied</p>
-                <p className="text-2xl font-semibold text-red-800">{stats.dissatisfied}</p>
+              <div className="bg-red-50 rounded-lg p-2">
+                <p className="text-xs text-gray-600">Dissatisfied</p>
+                <p className="text-sm font-semibold text-red-800">{stats.dissatisfied}</p>
               </div>
-              <div className="bg-yellow-50 rounded-xl p-4">
-                <p className="text-sm text-gray-600">Need Improvement</p>
-                <p className="text-2xl font-semibold text-yellow-800">{stats.needImprovement}</p>
+              <div className="bg-yellow-50 rounded-lg p-2">
+                <p className="text-xs text-gray-600">Need Improvement</p>
+                <p className="text-sm font-semibold text-yellow-800">{stats.needImprovement}</p>
               </div>
             </div>
           </div>
@@ -216,37 +289,37 @@ export default function MonthlyReportPage() {
           {/* Visit Details Table */}
           <div className="overflow-x-auto">
             {visits.length === 0 ? (
-              <div className="p-12 text-center">
-                <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No visits found for {reportPeriod}</p>
+              <div className="p-4 text-center">
+                <Calendar className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-xs text-gray-500">No visits found for {reportPeriod}</p>
               </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Purpose</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Purpose</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Outcome</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
+                    <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {visits.map((visit) => (
                     <tr key={visit.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900">
                         {formatDate(visit.dateOfVisit)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs font-medium text-gray-900">
                         {visit.companyName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-500">
                         {visit.purposeOfMeeting}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-2 py-1.5 whitespace-nowrap">
                         <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
                             visit.visitOutcome === 'Satisfied'
                               ? 'bg-green-100 text-green-800'
                               : visit.visitOutcome === 'Dissatisfied'
@@ -257,10 +330,10 @@ export default function MonthlyReportPage() {
                           {visit.visitOutcome}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-900">
                         {visit.potentialSaleValue ? `₹${visit.potentialSaleValue}` : '-'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-2 py-1.5 whitespace-nowrap text-xs text-gray-500">
                         {visit.status || 'Open'}
                       </td>
                     </tr>

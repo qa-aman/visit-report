@@ -492,6 +492,7 @@ Each day's travel plan contains the following information:
 - ✅ What if I submit incomplete plan? (System validates and shows errors)
 - ✅ What if I try to plan same customer on same day twice? (Show warning, allow if intentional)
 - ✅ What if I leave some days blank? (Allow, but show warning before submission)
+- ✅ What if I try to create another plan for the same month? (System prevents duplicate plans - shows error and redirects to existing plan)
 
 #### US-TP-002: View My Travel Plans
 **As a** Sales Engineer  
@@ -829,6 +830,20 @@ Each day's travel plan contains the following information:
     - Actual Check-in and Check-out times (if available)
     - Status
     - Notes
+    - Photos count and link to visit report if converted
+- **Add Comments:**
+  - "Add Comment" button allows adding feedback without rejecting
+  - Comment dialog with textarea for entering comments
+  - Comments are saved and displayed prominently on the plan
+  - Sales Engineer is notified when comments are added
+  - Sales Engineer can view comments and address them before resubmitting
+  - Comments show timestamp and team leader name
+  - Comments can be edited by team leader
+- **Approve/Reject Actions:**
+  - Approve button approves the plan and activates it
+  - Reject button requires rejection reason (mandatory)
+  - Both actions show confirmation dialogs
+  - Sales Engineer is notified of approval/rejection decision
     - Photo count
   - If visit report exists, shows "Visit Report Created" badge with link
   - Close button to return to review

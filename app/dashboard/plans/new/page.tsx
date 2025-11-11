@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
-import { getCurrentUser, saveTravelPlan } from '@/lib/storage';
+import { getCurrentUser, saveTravelPlan, getTravelPlans } from '@/lib/storage';
 import { initializeTravelPlanData } from '@/lib/initializeTravelPlans';
 import { TravelPlan, User } from '@/types';
 import { getMonthName } from '@/lib/travelPlanUtils';
@@ -22,7 +22,7 @@ export default function NewTravelPlanPage() {
     const now = new Date();
     return now.getMonth() === 11 ? now.getFullYear() + 1 : now.getFullYear();
   });
-  const { showToast } = useToast();
+  const toast = useToast();
 
   useEffect(() => {
     initializeTravelPlanData();
@@ -34,18 +34,34 @@ export default function NewTravelPlanPage() {
     }
     
     if (currentUser.role !== 'sales_engineer') {
-      showToast('Only Sales Engineers can create travel plans', 'error');
+      toast.showToast('Only Sales Engineers can create travel plans', 'error');
       router.push('/dashboard/plans');
       return;
     }
     
     setUser(currentUser);
-  }, [router, showToast]);
+  }, [router, toast]);
 
   const handleCreate = () => {
     if (!user) return;
 
     const monthName = getMonthName(month);
+    
+    // Check if plan already exists for this month/year
+    const existingPlans = getTravelPlans();
+    const duplicatePlan = existingPlans.find(
+      (p) => p.salesEngineerId === user.id && 
+             p.month === monthName && 
+             p.year === year &&
+             (p.status === 'draft' || p.status === 'submitted' || p.status === 'approved' || p.status === 'active')
+    );
+
+    if (duplicatePlan) {
+      toast.showToast(`A plan for ${monthName} ${year} already exists. Please edit the existing plan.`, 'error');
+      router.push(`/dashboard/plans/${duplicatePlan.id}`);
+      return;
+    }
+
     const plan: TravelPlan = {
       id: generateId(),
       salesEngineerId: user.id,
@@ -58,10 +74,10 @@ export default function NewTravelPlanPage() {
     };
 
     if (saveTravelPlan(plan)) {
-      showToast('Travel plan created successfully', 'success');
+      toast.showToast('Travel plan created successfully', 'success');
       router.push(`/dashboard/plans/${plan.id}`);
     } else {
-      showToast('Failed to create travel plan', 'error');
+      toast.showToast('Failed to create travel plan', 'error');
     }
   };
 

@@ -32,34 +32,34 @@ export default function ConfirmDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2 rounded-full ${
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-2">
+        <div className="p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`p-1.5 rounded-full ${
               type === 'danger' ? 'bg-red-100' :
               type === 'warning' ? 'bg-yellow-100' :
               'bg-blue-100'
             }`}>
-              <AlertTriangle className={`w-5 h-5 ${
+              <AlertTriangle className={`w-4 h-4 ${
                 type === 'danger' ? 'text-red-600' :
                 type === 'warning' ? 'text-yellow-600' :
                 'text-blue-600'
               }`} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
           </div>
-          <p className="text-gray-600 mb-6">{message}</p>
-          <div className="flex justify-end gap-3">
+          <p className="text-xs text-gray-600 mb-3">{message}</p>
+          <div className="flex justify-end gap-2">
             <button
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               {cancelText}
             </button>
             <button
               onClick={onConfirm}
-              className={`px-4 py-2 text-white rounded-lg transition-colors ${styles[type]}`}
+              className={`px-2 py-1 text-xs text-white rounded-lg transition-colors ${styles[type]}`}
             >
               {confirmText}
             </button>

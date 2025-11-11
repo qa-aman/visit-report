@@ -23,7 +23,9 @@ export default function ApprovePlanDetailPage() {
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [showApproveDialog, setShowApproveDialog] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showCommentDialog, setShowCommentDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [commentText, setCommentText] = useState('');
   const toast = useToast();
 
   useEffect(() => {
@@ -80,6 +82,35 @@ export default function ApprovePlanDetailPage() {
   const handleReject = () => {
     setRejectionReason('');
     setShowRejectDialog(true);
+  };
+
+  const handleAddComment = () => {
+    setCommentText(plan?.teamLeaderComments || '');
+    setShowCommentDialog(true);
+  };
+
+  const confirmAddComment = () => {
+    if (!plan || !user || !commentText.trim()) {
+      toast.showToast('Please provide a comment', 'error');
+      return;
+    }
+
+    const updatedPlan: TravelPlan = {
+      ...plan,
+      teamLeaderComments: commentText,
+      commentedAt: new Date().toISOString(),
+      commentedBy: user.id,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (saveTravelPlan(updatedPlan)) {
+      setPlan(updatedPlan);
+      toast.showToast('Comment added successfully. Sales Engineer will be notified.', 'success');
+      setShowCommentDialog(false);
+      setCommentText('');
+    } else {
+      toast.showToast('Failed to add comment', 'error');
+    }
   };
 
   const confirmApprove = () => {
@@ -154,24 +185,34 @@ export default function ApprovePlanDetailPage() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Review Travel Plan: {plan.month} {plan.year}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-xs text-gray-600 mt-0.5">
                 Submitted: {plan.submittedAt ? formatDateForDisplay(plan.submittedAt) : 'N/A'}
+                {plan.teamLeaderComments && (
+                  <span className="ml-2 text-blue-600">• Has Comments</span>
+                )}
               </p>
             </div>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-2">
+            <button
+              onClick={handleAddComment}
+              className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5"
+            >
+              <FileText className="w-3 h-3" />
+              Add Comment
+            </button>
             <button
               onClick={handleReject}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-1.5"
             >
-              <XCircle className="w-4 h-4" />
+              <XCircle className="w-3 h-3" />
               Reject
             </button>
             <button
               onClick={handleApprove}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1.5"
             >
-              <CheckCircle className="w-4 h-4" />
+              <CheckCircle className="w-3 h-3" />
               Approve
             </button>
           </div>
@@ -405,42 +446,92 @@ export default function ApprovePlanDetailPage() {
           onCancel={() => setShowApproveDialog(false)}
         />
 
+        {/* Comment Dialog */}
+        {showCommentDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-2">
+              <div className="p-2">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-semibold text-gray-900">Add Comment</h3>
+                  <button
+                    onClick={() => {
+                      setShowCommentDialog(false);
+                      setCommentText('');
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <XCircle className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-600 mb-2">
+                  Add comments or feedback for the Sales Engineer.
+                </p>
+                <textarea
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  rows={3}
+                  className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-2"
+                  placeholder="Enter your comments..."
+                />
+                <div className="flex justify-end gap-1.5">
+                  <button
+                    onClick={() => {
+                      setShowCommentDialog(false);
+                      setCommentText('');
+                    }}
+                    className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmAddComment}
+                    disabled={!commentText.trim()}
+                    className="px-2 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Comment
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Reject Dialog */}
         {showRejectDialog && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 rounded-full bg-red-100">
-                    <XCircle className="w-5 h-5 text-red-600" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-2">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-2">
+              <div className="p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1.5 rounded-full bg-red-100">
+                    <XCircle className="w-4 h-4 text-red-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Reject Travel Plan?</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Reject Travel Plan?</h3>
                 </div>
-                <p className="text-gray-600 mb-4">
+                <p className="text-xs text-gray-600 mb-2">
                   Please provide a reason for rejecting this plan:
                 </p>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
                   placeholder="Enter rejection reason..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-4"
+                  rows={3}
+                  className="w-full px-2 py-1 text-xs text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent mb-2"
                   required
                 />
-                <div className="flex justify-end gap-3">
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={() => {
                       setShowRejectDialog(false);
                       setRejectionReason('');
                     }}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={confirmReject}
                     disabled={!rejectionReason.trim()}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-2 py-1 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Reject Plan
                   </button>
@@ -457,84 +548,84 @@ export default function ApprovePlanDetailPage() {
 // Entry Detail Modal Component
 function EntryDetailModal({ entry, onClose }: { entry: TravelPlanEntry; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-2 max-h-[95vh] overflow-y-auto">
+        <div className="p-2 border-b border-gray-200 sticky top-0 bg-white">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">Visit Plan Details</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <h2 className="text-sm font-semibold text-gray-900">Visit Plan Details</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg">
               ✕
             </button>
           </div>
         </div>
-        <div className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-6">
+        <div className="p-2 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <div className="text-gray-900">{entry.date}</div>
-              <div className="text-sm text-gray-500">{entry.day}</div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Date</label>
+              <div className="text-xs text-gray-900">{entry.date}</div>
+              <div className="text-xs text-gray-500">{entry.day}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-              <div className="text-gray-900">{entry.customerName}</div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Customer Name</label>
+              <div className="text-xs text-gray-900">{entry.customerName}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-              <div className="text-gray-900">{entry.purpose}</div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Purpose</label>
+              <div className="text-xs text-gray-900">{entry.purpose}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Area/Region</label>
-              <div className="text-gray-900">{entry.areaRegion}</div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Area/Region</label>
+              <div className="text-xs text-gray-900">{entry.areaRegion}</div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">From Location</label>
-              <div className="text-gray-900 flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">From Location</label>
+              <div className="text-xs text-gray-900 flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
                 {entry.fromLocation}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">To Location</label>
-              <div className="text-gray-900 flex items-center gap-1">
-                <MapPin className="w-4 h-4" />
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">To Location</label>
+              <div className="text-xs text-gray-900 flex items-center gap-1">
+                <MapPin className="w-3 h-3" />
                 {entry.toLocation}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Planned Check-in</label>
-              <div className="text-gray-900 flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Planned Check-in</label>
+              <div className="text-xs text-gray-900 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
                 {entry.plannedCheckIn || 'Not set'}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Planned Check-out</label>
-              <div className="text-gray-900 flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Planned Check-out</label>
+              <div className="text-xs text-gray-900 flex items-center gap-1">
+                <Clock className="w-3 h-3" />
                 {entry.plannedCheckOut || 'Not set'}
               </div>
             </div>
             {entry.actualCheckIn && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Actual Check-in</label>
-                <div className="text-gray-900 flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">Actual Check-in</label>
+                <div className="text-xs text-gray-900 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
                   {entry.actualCheckIn}
                 </div>
               </div>
             )}
             {entry.actualCheckOut && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Actual Check-out</label>
-                <div className="text-gray-900 flex items-center gap-1">
-                  <Clock className="w-4 h-4" />
+                <label className="block text-xs font-medium text-gray-700 mb-0.5">Actual Check-out</label>
+                <div className="text-xs text-gray-900 flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
                   {entry.actualCheckOut}
                 </div>
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Status</label>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
                 entry.status === 'completed' ? 'bg-green-100 text-green-800' :
                 entry.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
                 entry.status === 'converted' ? 'bg-purple-100 text-purple-800' :
@@ -546,37 +637,37 @@ function EntryDetailModal({ entry, onClose }: { entry: TravelPlanEntry; onClose:
           </div>
           {entry.notes && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-              <div className="text-gray-900 bg-gray-50 p-3 rounded-lg">{entry.notes}</div>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Notes</label>
+              <div className="text-xs text-gray-900 bg-gray-50 p-2 rounded-lg">{entry.notes}</div>
             </div>
           )}
           {entry.photos && entry.photos.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Photos</label>
-              <div className="text-sm text-gray-600">
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Photos</label>
+              <div className="text-xs text-gray-600">
                 {entry.photos.length} photo(s) attached
               </div>
             </div>
           )}
           {entry.visitReportId && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 text-blue-900">
-                <FileText className="w-5 h-5" />
-                <span className="font-medium">Visit Report Created</span>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+              <div className="flex items-center gap-1.5 text-blue-900">
+                <FileText className="w-3 h-3" />
+                <span className="text-xs font-medium">Visit Report Created</span>
               </div>
               <a
                 href={`/dashboard/visits/${entry.visitReportId}`}
-                className="text-sm text-blue-600 hover:text-blue-700 mt-2 inline-block"
+                className="text-xs text-blue-600 hover:text-blue-700 mt-1 inline-block"
               >
                 View Visit Report →
               </a>
             </div>
           )}
         </div>
-        <div className="p-6 border-t border-gray-200 flex justify-end">
+        <div className="p-2 border-t border-gray-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            className="px-2 py-1 text-xs bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
             Close
           </button>

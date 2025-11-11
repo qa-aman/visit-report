@@ -231,36 +231,36 @@ export default function NewVisitPage() {
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto px-2">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900 mb-3 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-semibold text-gray-900">New Visit Report</h1>
-            <p className="text-gray-600 mt-1">Fill in the details of your client visit</p>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="p-3 border-b border-gray-200">
+            <h1 className="text-lg font-semibold text-gray-900">New Visit Report</h1>
+            <p className="text-xs text-gray-600 mt-0.5">Fill in the details of your client visit</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-8">
+          <form onSubmit={handleSubmit} className="p-4 space-y-4">
             {/* Link to Travel Plan */}
             {user.role === 'sales_engineer' && availablePlanEntries.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <span className="text-xs font-medium text-blue-900">
                       {selectedPlanEntryId ? 'Linked to Travel Plan' : 'Link to Travel Plan Entry'}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowPlanLinkModal(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
+                    className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium flex items-center gap-1.5"
                   >
                     <LinkIcon className="w-4 h-4" />
                     {selectedPlanEntryId ? 'Change Link' : 'Select Plan Entry'}
@@ -276,17 +276,17 @@ export default function NewVisitPage() {
 
             {/* Visit Information */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Visit Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Visit Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Date of Visit <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={formData.dateOfVisit}
                     onChange={(e) => handleInputChange('dateOfVisit', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.dateOfVisit ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -296,14 +296,14 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Day of Visit
                   </label>
                   <input
                     type="text"
                     value={formData.dateOfVisit ? getDayOfWeek(new Date(formData.dateOfVisit)) : ''}
                     disabled
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-gray-50 text-gray-500"
+                    className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
                   />
                 </div>
               </div>
@@ -311,17 +311,17 @@ export default function NewVisitPage() {
 
             {/* Company Information */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Company Information</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Name of Company <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.companyName ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="e.g., EPIGRAL"
@@ -332,25 +332,25 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">PLANT</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">PLANT</label>
                   <input
                     type="text"
                     value={formData.plant}
                     onChange={(e) => handleInputChange('plant', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., YAMUNA, H202"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     City / Area <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.cityArea}
                     onChange={(e) => handleInputChange('cityArea', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.cityArea ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="e.g., DAHEJ"
@@ -361,14 +361,14 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     State <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.state}
                     onChange={(e) => handleInputChange('state', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.state ? 'border-red-300' : 'border-gray-300'
                     }`}
                     placeholder="e.g., GUJARAT"
@@ -383,7 +383,7 @@ export default function NewVisitPage() {
             {/* Contact Persons */}
             <section>
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Contact Persons</h2>
+                <h2 className="text-sm font-semibold text-gray-900 mb-2">Contact Persons</h2>
                 <button
                   type="button"
                   onClick={addContactPerson}
@@ -393,11 +393,11 @@ export default function NewVisitPage() {
                   <span>Add Contact</span>
                 </button>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {contactPersons.map((contact, index) => (
                   <div
                     key={contact.id}
-                    className="p-4 border border-gray-200 rounded-xl space-y-4"
+                    className="p-2 border border-gray-200 rounded-lg space-y-2"
                   >
                     <div className="flex justify-between items-center">
                       <h3 className="text-sm font-medium text-gray-700">
@@ -413,16 +413,16 @@ export default function NewVisitPage() {
                         </button>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           value={contact.name}
                           onChange={(e) => handleContactChange(index, 'name', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             errors[`contact_${index}_name`] ? 'border-red-300' : 'border-gray-300'
                           }`}
                           placeholder="e.g., NIRMAL GOHIL"
@@ -434,26 +434,26 @@ export default function NewVisitPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Designation
                         </label>
                         <input
                           type="text"
                           value={contact.designation}
                           onChange={(e) => handleContactChange(index, 'designation', e.target.value)}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           placeholder="e.g., MANAGER - MECHANICAL"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Mobile
                         </label>
                         <input
                           type="tel"
                           value={contact.mobile}
                           onChange={(e) => handleContactChange(index, 'mobile', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             errors[`contact_${index}_mobile`] ? 'border-red-300' : 'border-gray-300'
                           }`}
                           placeholder="e.g., 6357997198"
@@ -465,14 +465,14 @@ export default function NewVisitPage() {
                         )}
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
                           Email
                         </label>
                         <input
                           type="email"
                           value={contact.email}
                           onChange={(e) => handleContactChange(index, 'email', e.target.value)}
-                          className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                             errors[`contact_${index}_email`] ? 'border-red-300' : 'border-gray-300'
                           }`}
                           placeholder="e.g., al.gohil@epigral"
@@ -491,16 +491,16 @@ export default function NewVisitPage() {
 
             {/* Meeting Details */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Meeting Details</h2>
-              <div className="space-y-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Meeting Details</h2>
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Purpose of Meeting <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.purposeOfMeeting}
                     onChange={(e) => handleInputChange('purposeOfMeeting', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.purposeOfMeeting ? 'border-red-300' : 'border-gray-300'
                     }`}
                   >
@@ -517,53 +517,53 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Discussion Points
                   </label>
                   <textarea
                     value={formData.discussionPoints}
                     onChange={(e) => handleInputChange('discussionPoints', e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={2}
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., 2124, 1570-WELDED"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Product / Services
                   </label>
                   <input
                     type="text"
                     value={formData.productServices}
                     onChange={(e) => handleInputChange('productServices', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., GASKET"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Action Step / Action Plan
                   </label>
                   <input
                     type="text"
                     value={formData.actionStep}
                     onChange={(e) => handleInputChange('actionStep', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., BQ SUBMITTING"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Remarks / Notes / Comments
                   </label>
                   <textarea
                     value={formData.remarks}
                     onChange={(e) => handleInputChange('remarks', e.target.value)}
-                    rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={2}
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., MULTIPLE SIZE QUOTE AND SUGGESTION 4MM SQ, EA-202"
                   />
                 </div>
@@ -572,10 +572,10 @@ export default function NewVisitPage() {
 
             {/* Opportunity Details */}
             <section>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Opportunity Details</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <h2 className="text-sm font-semibold text-gray-900 mb-2">Opportunity Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Potential Sale Value / Opportunity Size
                   </label>
                   <input
@@ -586,19 +586,19 @@ export default function NewVisitPage() {
                       const formatted = value ? parseInt(value).toLocaleString('en-IN') : '';
                       handleInputChange('potentialSaleValue', formatted);
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="e.g., 300000"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Visit Outcome <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.visitOutcome}
                     onChange={(e) => handleInputChange('visitOutcome', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.visitOutcome ? 'border-red-300' : 'border-gray-300'
                     }`}
                   >
@@ -615,13 +615,13 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Convert <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.convertStatus}
                     onChange={(e) => handleInputChange('convertStatus', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    className={`w-full px-3 py-1.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.convertStatus ? 'border-red-300' : 'border-gray-300'
                     }`}
                   >
@@ -638,11 +638,11 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => handleInputChange('status', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="Open">Open</option>
                     {predefinedOptions.status.map((status) => (
@@ -654,11 +654,11 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Result</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Result</label>
                   <select
                     value={formData.result}
                     onChange={(e) => handleInputChange('result', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select result</option>
                     {predefinedOptions.result.map((result) => (
@@ -670,14 +670,14 @@ export default function NewVisitPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     Closure Date
                   </label>
                   <input
                     type="date"
                     value={formData.closureDate}
                     onChange={(e) => handleInputChange('closureDate', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-1.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>

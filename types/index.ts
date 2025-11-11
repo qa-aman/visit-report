@@ -127,6 +127,9 @@ export interface TravelPlan {
   rejectedAt?: string;
   rejectedBy?: string;
   rejectionComments?: string;
+  teamLeaderComments?: string; // Comments from team leader (not rejection)
+  commentedAt?: string; // When team leader added comments
+  commentedBy?: string; // Team leader who commented
   createdAt: string;
   updatedAt: string;
 }

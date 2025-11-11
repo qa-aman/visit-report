@@ -8,7 +8,7 @@ import { getTravelPlans, getTravelPlanEntries } from '@/lib/storage';
 import { initializeTravelPlanData } from '@/lib/initializeTravelPlans';
 import { TravelPlan, TravelPlanEntry, User } from '@/types';
 import { formatDateForDisplay, getConversionStats } from '@/lib/travelPlanUtils';
-import { Calendar, Plus, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
+import { Calendar, Plus, CheckCircle, Clock, XCircle, FileText, Table } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 
 export default function TravelPlansPage() {
@@ -16,7 +16,8 @@ export default function TravelPlansPage() {
   const [user, setUser] = useState<User | null>(null);
   const [plans, setPlans] = useState<TravelPlan[]>([]);
   const [entries, setEntries] = useState<TravelPlanEntry[]>([]);
-  const { showToast } = useToast();
+  const [viewMode, setViewMode] = useState<'calendar' | 'table'>('table');
+  const toast = useToast();
 
   useEffect(() => {
     // Initialize dummy data if needed
@@ -88,20 +89,46 @@ export default function TravelPlansPage() {
   return (
     <Layout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Travel Plans</h1>
-            <p className="text-gray-600 mt-2">Plan and manage your monthly travel itineraries</p>
+            <h1 className="text-xl font-bold text-gray-900">Travel Plans</h1>
+            <p className="text-xs text-gray-600 mt-0.5">Plan and manage your monthly travel itineraries</p>
           </div>
-          {user.role === 'sales_engineer' && (
-            <button
-              onClick={() => router.push('/dashboard/plans/new')}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Create New Plan</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1 text-xs rounded transition-colors flex items-center gap-1.5 ${
+                  viewMode === 'table'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Table className="w-3 h-3" />
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`px-3 py-1 text-xs rounded transition-colors flex items-center gap-1.5 ${
+                  viewMode === 'calendar'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Calendar className="w-3 h-3" />
+                Calendar
+              </button>
+            </div>
+            {user.role === 'sales_engineer' && (
+              <button
+                onClick={() => router.push('/dashboard/plans/new')}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Plan</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {plans.length === 0 ? (
@@ -118,8 +145,61 @@ export default function TravelPlansPage() {
               </button>
             )}
           </div>
+        ) : viewMode === 'table' ? (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Month/Year</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Total Visits</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Converted</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Pending</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Conversion Rate</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {plans.map((plan) => {
+                    const planEntries = getPlanEntries(plan.id);
+                    const stats = getConversionStats(planEntries);
+                    return (
+                      <tr
+                        key={plan.id}
+                        className="hover:bg-gray-50 cursor-pointer"
+                        onClick={() => router.push(`/dashboard/plans/${plan.id}`)}
+                      >
+                        <td className="px-3 py-2">
+                          <div className="font-medium text-gray-900">{plan.month} {plan.year}</div>
+                        </td>
+                        <td className="px-3 py-2">{getStatusBadge(plan.status)}</td>
+                        <td className="px-3 py-2 text-gray-900">{stats.total}</td>
+                        <td className="px-3 py-2 text-green-600 font-medium">{stats.converted}</td>
+                        <td className="px-3 py-2 text-blue-600 font-medium">{stats.pending}</td>
+                        <td className="px-3 py-2 text-purple-600 font-medium">{stats.conversionRate}%</td>
+                        <td className="px-3 py-2 text-gray-600 text-xs">{formatDateForDisplay(plan.createdAt)}</td>
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/dashboard/plans/${plan.id}`);
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-3">
             {plans.map((plan) => {
               const planEntries = getPlanEntries(plan.id);
               const stats = getConversionStats(planEntries);
@@ -127,66 +207,41 @@ export default function TravelPlansPage() {
               return (
                 <div
                   key={plan.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:border-orange-300 transition-all cursor-pointer"
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 hover:border-orange-300 transition-all cursor-pointer"
                   onClick={() => router.push(`/dashboard/plans/${plan.id}`)}
                 >
-                  <div className="flex justify-between items-start mb-4">
+                  <div className="flex justify-between items-start mb-2">
                     <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-xl font-semibold text-gray-900">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-base font-semibold text-gray-900">
                           {plan.month} {plan.year}
                         </h2>
                         {getStatusBadge(plan.status)}
                       </div>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-xs text-gray-500">
                         Created: {formatDateForDisplay(plan.createdAt)}
                         {plan.submittedAt && ` • Submitted: ${formatDateForDisplay(plan.submittedAt)}`}
                         {plan.approvedAt && ` • Approved: ${formatDateForDisplay(plan.approvedAt)}`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {plan.status === 'approved' && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/dashboard/plans/${plan.id}`);
-                          }}
-                          className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
-                        >
-                          View Plan
-                        </button>
-                      )}
-                    </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm text-gray-600">Total Visits</span>
-                      </div>
-                      <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    <div className="bg-gray-50 rounded p-2">
+                      <div className="text-xs text-gray-600 mb-0.5">Total</div>
+                      <p className="text-lg font-bold text-gray-900">{stats.total}</p>
                     </div>
-                    <div className="bg-green-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-gray-600">Converted</span>
-                      </div>
-                      <p className="text-2xl font-bold text-green-600">{stats.converted}</p>
+                    <div className="bg-green-50 rounded p-2">
+                      <div className="text-xs text-gray-600 mb-0.5">Converted</div>
+                      <p className="text-lg font-bold text-green-600">{stats.converted}</p>
                     </div>
-                    <div className="bg-blue-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm text-gray-600">Pending</span>
-                      </div>
-                      <p className="text-2xl font-bold text-blue-600">{stats.pending}</p>
+                    <div className="bg-blue-50 rounded p-2">
+                      <div className="text-xs text-gray-600 mb-0.5">Pending</div>
+                      <p className="text-lg font-bold text-blue-600">{stats.pending}</p>
                     </div>
-                    <div className="bg-purple-50 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <FileText className="w-4 h-4 text-purple-600" />
-                        <span className="text-sm text-gray-600">Conversion Rate</span>
-                      </div>
-                      <p className="text-2xl font-bold text-purple-600">{stats.conversionRate}%</p>
+                    <div className="bg-purple-50 rounded p-2">
+                      <div className="text-xs text-gray-600 mb-0.5">Rate</div>
+                      <p className="text-lg font-bold text-purple-600">{stats.conversionRate}%</p>
                     </div>
                   </div>
                 </div>

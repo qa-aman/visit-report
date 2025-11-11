@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/storage';
 import { getTravelPlans, getTravelPlanEntriesByPlanId, saveTravelPlanEntry, saveTravelPlan } from '@/lib/storage';
 import { TravelPlan, TravelPlanEntry, User } from '@/types';
 import { getDaysInMonth, getMonthName, formatDateForInput, getStatusIndicator, getConversionStats, getEntriesForDate, getDayName } from '@/lib/travelPlanUtils';
-import { Calendar, Plus, CheckCircle, Clock, ArrowLeft, FileText, MapPin, ExternalLink, Camera, X } from 'lucide-react';
+import { Calendar, Plus, CheckCircle, Clock, ArrowLeft, FileText, MapPin, ExternalLink, Camera, X, Table } from 'lucide-react';
 import { useToast } from '@/components/ToastProvider';
 import { saveVisitEntry, getVisitEntries } from '@/lib/storage';
 import { VisitEntry, ContactPerson } from '@/types';
@@ -23,7 +23,8 @@ export default function TravelPlanDetailPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState<TravelPlanEntry | null>(null);
-  const { showToast } = useToast();
+  const [viewMode, setViewMode] = useState<'calendar' | 'table'>('calendar');
+  const toast = useToast();
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -37,14 +38,14 @@ export default function TravelPlanDetailPage() {
     const foundPlan = allPlans.find((p) => p.id === planId);
     
     if (!foundPlan) {
-      showToast('Travel plan not found', 'error');
+      toast.showToast('Travel plan not found', 'error');
       router.push('/dashboard/plans');
       return;
     }
 
     // Check permissions
     if (currentUser.role === 'sales_engineer' && foundPlan.salesEngineerId !== currentUser.id) {
-      showToast('You do not have permission to view this plan', 'error');
+      toast.showToast('You do not have permission to view this plan', 'error');
       router.push('/dashboard/plans');
       return;
     }
@@ -52,7 +53,7 @@ export default function TravelPlanDetailPage() {
     setPlan(foundPlan);
     const planEntries = getTravelPlanEntriesByPlanId(planId);
     setEntries(planEntries);
-  }, [planId, router, showToast]);
+  }, [planId, router, toast]);
 
   const monthDays = useMemo(() => {
     if (!plan) return [];
@@ -111,12 +112,12 @@ export default function TravelPlanDetailPage() {
         const filtered = prev.filter((e) => e.id !== entry.id);
         return [...filtered, entry];
       });
-      showToast(editingEntry ? 'Entry updated successfully' : 'Entry created successfully', 'success');
+      toast.showToast(editingEntry ? 'Entry updated successfully' : 'Entry created successfully', 'success');
       setShowEntryModal(false);
       setSelectedDate(null);
       setEditingEntry(null);
     } else {
-      showToast('Failed to save entry', 'error');
+      toast.showToast('Failed to save entry', 'error');
     }
   };
 
@@ -131,7 +132,7 @@ export default function TravelPlanDetailPage() {
 
     // Check if entry is completed or in-progress
     if (entry.status !== 'completed' && entry.status !== 'in-progress') {
-      showToast('Only completed or in-progress visits can be converted to reports', 'error');
+      toast.showToast('Only completed or in-progress visits can be converted to reports', 'error');
       return;
     }
 
@@ -191,21 +192,21 @@ export default function TravelPlanDetailPage() {
             const filtered = prev.filter((e) => e.id !== entry.id);
             return [...filtered, updatedEntry];
           });
-          showToast('Visit report created from travel plan', 'success');
+          toast.showToast('Visit report created from travel plan', 'success');
           // Navigate to the new visit report
           setTimeout(() => {
             router.push(`/dashboard/visits/${visitEntry.id}`);
           }, 500);
         } else {
-          showToast('Report created but failed to update plan entry', 'warning');
+          toast.showToast('Report created but failed to update plan entry', 'warning');
           router.push(`/dashboard/visits/${visitEntry.id}`);
         }
       } else {
-        showToast('Failed to create visit report', 'error');
+        toast.showToast('Failed to create visit report', 'error');
       }
     } catch (error) {
       console.error('Error converting to report:', error);
-      showToast('Failed to convert to visit report', 'error');
+      toast.showToast('Failed to convert to visit report', 'error');
     }
   };
 
@@ -221,9 +222,9 @@ export default function TravelPlanDetailPage() {
 
     if (saveTravelPlan(updatedPlan)) {
       setPlan(updatedPlan);
-      showToast('Plan submitted for approval', 'success');
+      toast.showToast('Plan submitted for approval', 'success');
     } else {
-      showToast('Failed to submit plan', 'error');
+      toast.showToast('Failed to submit plan', 'error');
     }
   };
 
@@ -261,38 +262,39 @@ export default function TravelPlanDetailPage() {
 
         {/* Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-4 h-4 text-gray-600" />
-              <span className="text-sm text-gray-600">Total Visits</span>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <Calendar className="w-3 h-3 text-gray-600" />
+              <span className="text-xs text-gray-600">Total</span>
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+            <p className="text-lg font-bold text-gray-900">{stats.total}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="text-sm text-gray-600">Converted</span>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <CheckCircle className="w-3 h-3 text-green-600" />
+              <span className="text-xs text-gray-600">Converted</span>
             </div>
-            <p className="text-2xl font-bold text-green-600">{stats.converted}</p>
+            <p className="text-lg font-bold text-green-600">{stats.converted}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-blue-600" />
-              <span className="text-sm text-gray-600">Pending</span>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <Clock className="w-3 h-3 text-blue-600" />
+              <span className="text-xs text-gray-600">Pending</span>
             </div>
-            <p className="text-2xl font-bold text-blue-600">{stats.pending}</p>
+            <p className="text-lg font-bold text-blue-600">{stats.pending}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText className="w-4 h-4 text-purple-600" />
-              <span className="text-sm text-gray-600">Conversion Rate</span>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <FileText className="w-3 h-3 text-purple-600" />
+              <span className="text-xs text-gray-600">Rate</span>
             </div>
-            <p className="text-2xl font-bold text-purple-600">{stats.conversionRate}%</p>
+            <p className="text-lg font-bold text-purple-600">{stats.conversionRate}%</p>
           </div>
         </div>
 
-        {/* Calendar Grid */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        {/* Calendar View */}
+        {viewMode === 'calendar' && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
           <div className="grid grid-cols-7 gap-2">
             {/* Day headers */}
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -312,15 +314,15 @@ export default function TravelPlanDetailPage() {
                 <div
                   key={dateStr}
                   className={`
-                    min-h-[100px] border rounded-lg p-2 cursor-pointer transition-all
+                    min-h-[80px] border rounded p-1.5 cursor-pointer transition-all
                     ${isToday ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'}
                     ${isPast ? 'bg-gray-50' : 'bg-white'}
-                    ${canEdit ? 'hover:shadow-md' : ''}
+                    ${canEdit ? 'hover:shadow-sm' : ''}
                   `}
                   onClick={() => canEdit && handleDayClick(date)}
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <span className={`text-sm font-medium ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
+                  <div className="flex justify-between items-start mb-0.5">
+                    <span className={`text-xs font-medium ${isToday ? 'text-orange-600' : 'text-gray-900'}`}>
                       {date.getDate()}
                     </span>
                     {dayEntries.length > 0 && (
@@ -349,7 +351,7 @@ export default function TravelPlanDetailPage() {
                     )}
                   </div>
                   {dayEntries.length > 0 && (
-                    <div className="text-xs text-gray-600 space-y-1">
+                    <div className="text-xs text-gray-600 space-y-0.5">
                       {dayEntries.slice(0, 2).map((entry) => (
                         <div key={entry.id} className="truncate" title={entry.customerName}>
                           {entry.customerName}
@@ -359,7 +361,7 @@ export default function TravelPlanDetailPage() {
                         </div>
                       ))}
                       {dayEntries.length > 2 && (
-                        <div className="text-gray-400">+{dayEntries.length - 2} more</div>
+                        <div className="text-xs text-gray-400">+{dayEntries.length - 2}</div>
                       )}
                     </div>
                   )}
@@ -368,6 +370,97 @@ export default function TravelPlanDetailPage() {
             })}
           </div>
         </div>
+        )}
+
+        {/* Table View */}
+        {viewMode === 'table' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Purpose</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">From → To</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Check-in/out</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {entries.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-3 py-8 text-center text-gray-500 text-xs">No planned visits</td>
+                    </tr>
+                  ) : (
+                    entries
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                      .map((entry) => {
+                        const indicator = getStatusIndicator(entry.status, entry.visitReportId);
+                        return (
+                          <tr
+                            key={entry.id}
+                            className="hover:bg-gray-50 cursor-pointer"
+                            onClick={() => {
+                              const date = new Date(entry.date);
+                              setSelectedDate(date);
+                              setEditingEntry(entry);
+                              setShowEntryModal(true);
+                            }}
+                          >
+                            <td className="px-3 py-2">
+                              <div className="text-xs font-medium text-gray-900">{entry.date}</div>
+                              <div className="text-xs text-gray-500">{entry.day}</div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="text-xs font-medium text-gray-900">{entry.customerName}</div>
+                              <div className="text-xs text-gray-500">{entry.areaRegion}</div>
+                            </td>
+                            <td className="px-3 py-2 text-xs text-gray-900">{entry.purpose}</td>
+                            <td className="px-3 py-2">
+                              <div className="text-xs text-gray-900">{entry.fromLocation} → {entry.toLocation}</div>
+                            </td>
+                            <td className="px-3 py-2">
+                              {entry.plannedCheckIn && (
+                                <div className="text-xs text-gray-600">In: {entry.plannedCheckIn}</div>
+                              )}
+                              {entry.plannedCheckOut && (
+                                <div className="text-xs text-gray-600">Out: {entry.plannedCheckOut}</div>
+                              )}
+                            </td>
+                            <td className="px-3 py-2">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                entry.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                entry.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
+                                entry.status === 'converted' ? 'bg-purple-100 text-purple-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`} title={indicator.label}>
+                                {indicator.icon} {entry.status}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2">
+                              {entry.visitReportId && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(`/dashboard/visits/${entry.visitReportId}`);
+                                  }}
+                                  className="text-xs text-blue-600 hover:text-blue-800"
+                                >
+                                  View Report
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Action Buttons */}
         {user.role === 'sales_engineer' && plan.status === 'draft' && (
@@ -434,66 +527,66 @@ function EntryModal({ entry, date, onSave, onConvert, onClose }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-2 max-h-[95vh] overflow-y-auto">
+        <div className="p-2 border-b border-gray-200 sticky top-0 bg-white">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-sm font-semibold text-gray-900">
               {entry ? 'Edit Visit' : 'Add Visit'} - {date.toLocaleDateString()}
             </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg">
               ✕
             </button>
           </div>
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-2 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">From Location</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">From Location</label>
               <input
                 type="text"
                 value={formData.fromLocation}
                 onChange={(e) => setFormData({ ...formData, fromLocation: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">To Location</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">To Location</label>
               <input
                 type="text"
                 value={formData.toLocation}
                 onChange={(e) => setFormData({ ...formData, toLocation: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 required
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Area/Region</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Area/Region</label>
             <input
               type="text"
               value={formData.areaRegion}
               onChange={(e) => setFormData({ ...formData, areaRegion: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Customer Name *</label>
             <input
               type="text"
               value={formData.customerName}
               onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Purpose</label>
             <select
               value={formData.purpose}
               onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="">Select Purpose</option>
               <option value="Product Demo">Product Demo</option>
@@ -504,52 +597,52 @@ function EntryModal({ entry, date, onSave, onConvert, onClose }: {
               <option value="Site Survey">Site Survey</option>
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Planned Check-in</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Planned Check-in</label>
               <input
                 type="time"
                 value={formData.plannedCheckIn}
                 onChange={(e) => setFormData({ ...formData, plannedCheckIn: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Planned Check-out</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Planned Check-out</label>
               <input
                 type="time"
                 value={formData.plannedCheckOut}
                 onChange={(e) => setFormData({ ...formData, plannedCheckOut: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Actual Check-in</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Actual Check-in</label>
               <input
                 type="time"
                 value={formData.actualCheckIn}
                 onChange={(e) => setFormData({ ...formData, actualCheckIn: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Actual Check-out</label>
+              <label className="block text-xs font-medium text-gray-700 mb-0.5">Actual Check-out</label>
               <input
                 type="time"
                 value={formData.actualCheckOut}
                 onChange={(e) => setFormData({ ...formData, actualCheckOut: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Status</label>
             <select
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             >
               <option value="planned">Planned</option>
               <option value="in-progress">In Progress</option>
@@ -559,17 +652,17 @@ function EntryModal({ entry, date, onSave, onConvert, onClose }: {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Notes</label>
             <textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              rows={2}
+              className="w-full px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Photos (Optional)</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <label className="block text-xs font-medium text-gray-700 mb-0.5">Photos (Optional)</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 text-center">
               <input
                 type="file"
                 accept="image/jpeg,image/png"
@@ -582,29 +675,27 @@ function EntryModal({ entry, date, onSave, onConvert, onClose }: {
                     alert('Maximum 10 photos allowed');
                     return;
                   }
-                  // In a real app, these would be uploaded to a server
-                  // For now, we'll just store the file names
                   const photoNames = files.map(f => f.name);
                   setFormData({ ...formData, photos: [...(entry?.photos || []), ...photoNames] });
                 }}
               />
               <label
                 htmlFor="photo-upload"
-                className="cursor-pointer flex flex-col items-center gap-2 hover:bg-gray-50 rounded-lg p-4 transition-colors"
+                className="cursor-pointer flex flex-col items-center gap-1 hover:bg-gray-50 rounded-lg p-2 transition-colors"
               >
-                <Camera className="w-8 h-8 text-gray-400" />
-                <span className="text-sm text-gray-600">
-                  Click to upload photos (JPG/PNG, max 5MB each, max 10 photos)
+                <Camera className="w-4 h-4 text-gray-400" />
+                <span className="text-xs text-gray-600">
+                  Click to upload (max 10)
                 </span>
                 <span className="text-xs text-gray-500">
-                  {formData.photos.length} of 10 photos
+                  {formData.photos.length}/10
                 </span>
               </label>
               {formData.photos && formData.photos.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-1">
                   {formData.photos.map((photo, idx) => (
-                    <div key={idx} className="relative flex items-center gap-1 bg-gray-100 px-2 py-1 rounded text-xs">
-                      <span className="text-gray-700">{photo}</span>
+                    <div key={idx} className="relative flex items-center gap-1 bg-gray-100 px-1.5 py-0.5 rounded text-xs">
+                      <span className="text-gray-700 truncate max-w-[100px]">{photo}</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -624,41 +715,41 @@ function EntryModal({ entry, date, onSave, onConvert, onClose }: {
               )}
             </div>
           </div>
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
+          <div className="flex justify-between items-center pt-2 border-t border-gray-200">
             <div>
               {entry && (entry.status === 'completed' || entry.status === 'in-progress') && !entry.visitReportId && (
                 <button
                   type="button"
                   onClick={onConvert}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                  className="px-2 py-1 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1"
                 >
-                  <FileText className="w-4 h-4" />
-                  Convert to Report
+                  <FileText className="w-3 h-3" />
+                  Convert
                 </button>
               )}
               {entry?.visitReportId && (
                 <a
                   href={`/dashboard/visits/${entry.visitReportId}`}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-2 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3 h-3" />
                   View Report
                 </a>
               )}
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-2 py-1 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                className="px-2 py-1 text-xs bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
               >
-                {entry ? 'Update' : 'Save'} Entry
+                {entry ? 'Update' : 'Save'}
               </button>
             </div>
           </div>

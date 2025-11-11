@@ -142,14 +142,22 @@ Each visit record contains the following information:
 
 #### US-006: Calculate Monthly Report
 **As a** Sales Engineer  
-**I want to** generate a monthly visit report  
-**So that** I can submit it to my Team Leader
+**I want to** generate a monthly visit report with Planned vs Actual comparison  
+**So that** I can submit it to my Team Leader and track plan execution
 
 **Acceptance Criteria:**
 - I can select a month/period
 - System aggregates all visits for that period
 - Report includes header information (Sales Engineer, Team Leader, Vertical)
+- **Planned vs Actual Section:**
+  - Shows Planned Visits count (from approved travel plan for that month)
+  - Shows Actual Visits count (from visit reports for that month)
+  - Shows Variance (difference between planned and actual)
+  - Shows Completion Rate (actual/planned percentage)
+  - Only displays if an approved travel plan exists for the selected month
+  - Variance is color-coded: green if actual >= planned, red if actual < planned
 - Report can be exported/printed in a formatted view
+- Planned vs Actual data is included in exported CSV/Excel
 
 #### US-016: View Visit Details
 **As a** Sales Engineer  
