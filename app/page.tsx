@@ -1,35 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { getCurrentUser } from '@/lib/storage';
 
 export default function Home() {
-  const router = useRouter();
-  const [isRedirecting, setIsRedirecting] = useState(true);
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    // Ensure this runs after component mounts
-    const redirect = () => {
-      try {
-        const user = getCurrentUser();
-        if (user) {
-          router.replace('/dashboard');
-        } else {
-          router.replace('/login');
-        }
-      } catch (error) {
-        console.error('Error checking user:', error);
-        router.replace('/login');
-      } finally {
-        setIsRedirecting(false);
+    // Prevent multiple redirects
+    if (hasRedirected.current || typeof window === 'undefined') return;
+    
+    const currentPath = window.location.pathname;
+    // Don't redirect if already on target pages
+    if (currentPath === '/login' || currentPath === '/dashboard') {
+      return;
+    }
+    
+    hasRedirected.current = true;
+    
+    try {
+      const user = getCurrentUser();
+      const targetPath = user ? '/dashboard' : '/login';
+      
+      // Only redirect if not already on target
+      if (currentPath !== targetPath) {
+        window.location.replace(targetPath);
       }
-    };
-
-    // Small delay to ensure hydration is complete
-    const timer = setTimeout(redirect, 100);
-    return () => clearTimeout(timer);
-  }, [router]);
+    } catch (error) {
+      console.error('Error checking user:', error);
+      if (currentPath !== '/login') {
+        window.location.replace('/login');
+      }
+    }
+  }, []);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">

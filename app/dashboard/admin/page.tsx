@@ -3,15 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
-import { getCurrentUser } from '@/lib/storage';
+import { getCurrentUser, getSystemConfig, saveSystemConfig } from '@/lib/storage';
 import { getVisitEntries } from '@/lib/storage';
 import { predefinedOptions } from '@/lib/personas';
 import { User } from '@/types';
-import { Settings, Users, FileText, Database } from 'lucide-react';
+import { Settings, Users, FileText, Database, CheckCircle, XCircle } from 'lucide-react';
+import { useToast } from '@/components/ToastProvider';
 
 export default function AdminPage() {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
+  const [systemConfig, setSystemConfig] = useState(getSystemConfig());
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -32,6 +35,59 @@ export default function AdminPage() {
         <div>
           <h1 className="text-3xl font-semibold text-gray-900">Administration</h1>
           <p className="text-gray-600 mt-1">Manage system settings and configurations</p>
+        </div>
+
+        {/* System Configuration */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">System Configuration</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div>
+                <h3 className="text-sm font-medium text-gray-900">Travel Plan Approval Required</h3>
+                <p className="text-xs text-gray-600 mt-0.5">
+                  {systemConfig.approvalRequired 
+                    ? 'Plans must be approved by Team Leaders before becoming active'
+                    : 'Plans become active immediately after creation'}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const newConfig = {
+                    ...systemConfig,
+                    approvalRequired: !systemConfig.approvalRequired,
+                    updatedAt: new Date().toISOString(),
+                    updatedBy: user?.id || 'admin',
+                  };
+                  if (saveSystemConfig(newConfig)) {
+                    setSystemConfig(newConfig);
+                    toast.showToast(
+                      `Approval requirement ${newConfig.approvalRequired ? 'enabled' : 'disabled'}`,
+                      'success'
+                    );
+                  } else {
+                    toast.showToast('Failed to update configuration', 'error');
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                  systemConfig.approvalRequired
+                    ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {systemConfig.approvalRequired ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Enabled</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4" />
+                    <span className="text-sm font-medium">Disabled</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

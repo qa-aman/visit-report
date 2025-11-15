@@ -13,22 +13,29 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const currentUser = getCurrentUser();
     if (!currentUser) {
-      router.push('/login');
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/login') {
+        router.replace('/login');
+      }
     } else {
       setUser(currentUser);
     }
-  }, [router]);
+    setIsChecking(false);
+  }, []); // Empty dependency array - only run once
 
   const handleLogout = () => {
     clearCurrentUser();
     router.push('/login');
   };
 
-  if (!user) {
+  if (isChecking || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>

@@ -9,9 +9,10 @@ import { getPersonaById, getTeamLeaderForEngineer, getVerticalForLeader } from '
 import { predefinedOptions } from '@/lib/personas';
 import { VisitEntry, ContactPerson, User, TravelPlanEntry, TravelPlan } from '@/types';
 import { formatDate, getDayOfWeek, generateId, validateEmail, validateMobile } from '@/lib/utils';
-import { ArrowLeft, Plus, X, Calendar, Link as LinkIcon, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, X, Calendar, Link as LinkIcon, CheckCircle, Grid, List } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/components/ToastProvider';
+import VisitReportCalendar, { CalendarViewMode } from '@/components/VisitReportCalendar';
 
 export default function NewVisitPage() {
   const router = useRouter();
@@ -45,6 +46,12 @@ export default function NewVisitPage() {
   const [selectedPlanEntryId, setSelectedPlanEntryId] = useState<string>('');
   const [availablePlanEntries, setAvailablePlanEntries] = useState<TravelPlanEntry[]>([]);
   const [showPlanLinkModal, setShowPlanLinkModal] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
+  const [calendarViewMode, setCalendarViewMode] = useState<CalendarViewMode>('week');
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [selectedDateForVisit, setSelectedDateForVisit] = useState<Date | null>(null);
+  const [selectedPlanEntry, setSelectedPlanEntry] = useState<TravelPlanEntry | null>(null);
+  const [viewType, setViewType] = useState<'calendar' | 'list'>('calendar');
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -54,14 +61,17 @@ export default function NewVisitPage() {
     }
     setUser(currentUser);
 
-    // Load available travel plan entries for linking
+    // Load available travel plan entries for linking (only approved plans)
     if (currentUser.role === 'sales_engineer') {
-      const plans = getTravelPlans().filter(p => p.salesEngineerId === currentUser.id && (p.status === 'approved' || p.status === 'active'));
+      const plans = getTravelPlans().filter(p => 
+        p.salesEngineerId === currentUser.id && 
+        (p.status === 'approved' || p.status === 'active')
+      );
       const allEntries: TravelPlanEntry[] = [];
       plans.forEach(plan => {
         const entries = getTravelPlanEntriesByPlanId(plan.id);
         // Only show entries that haven't been converted yet
-        const unconvertedEntries = entries.filter(e => !e.visitReportId && (e.status === 'completed' || e.status === 'in-progress' || e.status === 'planned'));
+        const unconvertedEntries = entries.filter(e => !e.visitReportId);
         allEntries.push(...unconvertedEntries);
       });
       setAvailablePlanEntries(allEntries);
@@ -115,8 +125,41 @@ export default function NewVisitPage() {
       }));
       setSelectedPlanEntryId(entryId);
       setShowPlanLinkModal(false);
+      setShowCalendarView(false);
       toast.showToast('Travel plan entry linked and form pre-filled', 'success');
     }
+  };
+
+  const handleCalendarDateClick = (date: Date, entry?: TravelPlanEntry) => {
+    setSelectedDateForVisit(date);
+    if (entry) {
+      // Pre-fill from planned visit
+      setSelectedPlanEntry(entry);
+      setSelectedPlanEntryId(entry.id);
+      setFormData(prev => ({
+        ...prev,
+        dateOfVisit: entry.date,
+        companyName: entry.customerName,
+        cityArea: entry.areaRegion,
+        state: entry.toLocation,
+        purposeOfMeeting: entry.purpose,
+        remarks: entry.notes || '',
+      }));
+    } else {
+      // Create unplanned visit
+      setSelectedPlanEntry(null);
+      setSelectedPlanEntryId('');
+      setFormData(prev => ({
+        ...prev,
+        dateOfVisit: formatDate(date),
+        companyName: '',
+        cityArea: '',
+        state: '',
+        purposeOfMeeting: '',
+        remarks: '',
+      }));
+    }
+    setShowVisitModal(true);
   };
 
   const validateForm = (): boolean => {
@@ -207,16 +250,34 @@ export default function NewVisitPage() {
           }
         }
         toast.showToast('Visit report created successfully', 'success');
+        setShowVisitModal(false);
+        setSelectedDateForVisit(null);
+        setSelectedPlanEntry(null);
+        // Reset form
+        setFormData({
+          dateOfVisit: formatDate(new Date()),
+          companyName: '',
+          plant: '',
+          cityArea: '',
+          state: '',
+          purposeOfMeeting: '',
+          discussionPoints: '',
+          productServices: '',
+          actionStep: '',
+          remarks: '',
+          potentialSaleValue: '',
+          visitOutcome: '' as 'Satisfied' | 'Dissatisfied' | 'Need for Improvement' | '',
+          convertStatus: '',
+          status: '',
+          result: '',
+          closureDate: '',
+        });
+        setSelectedPlanEntryId('');
       } else {
         toast.showToast('Failed to save visit report. Storage may be full.', 'error');
         setLoading(false);
         return;
       }
-      
-      // Show success and redirect
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 500);
     } catch (error) {
       console.error('Error saving visit:', error);
       toast.showToast('Failed to create visit report', 'error');
@@ -241,36 +302,214 @@ export default function NewVisitPage() {
         </Link>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-3 border-b border-gray-200">
-            <h1 className="text-lg font-semibold text-gray-900">New Visit Report</h1>
-            <p className="text-xs text-gray-600 mt-0.5">Fill in the details of your client visit</p>
+          <div className="p-3 border-b border-gray-200 flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">New Visit Report</h1>
+              <p className="text-xs text-gray-600 mt-0.5">
+                {viewType === 'calendar' 
+                  ? 'Click on a planned visit or any empty space in the calendar to create a visit report'
+                  : 'Click on a planned visit or the "Add Unplanned Visit" button to create a visit report'}
+              </p>
+            </div>
+            {user.role === 'sales_engineer' && (
+              <div className="flex items-center gap-1 border border-gray-300 rounded-lg p-0.5">
+                <button
+                  onClick={() => setViewType('calendar')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded transition-colors ${
+                    viewType === 'calendar'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Calendar
+                </button>
+                <button
+                  onClick={() => setViewType('list')}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded transition-colors ${
+                    viewType === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-transparent text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                  List
+                </button>
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 space-y-4">
-            {/* Link to Travel Plan */}
-            {user.role === 'sales_engineer' && availablePlanEntries.length > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <span className="text-xs font-medium text-blue-900">
-                      {selectedPlanEntryId ? 'Linked to Travel Plan' : 'Link to Travel Plan Entry'}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPlanLinkModal(true)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs font-medium flex items-center gap-1.5"
-                  >
-                    <LinkIcon className="w-4 h-4" />
-                    {selectedPlanEntryId ? 'Change Link' : 'Select Plan Entry'}
-                  </button>
+          {/* Calendar View */}
+          {user.role === 'sales_engineer' && viewType === 'calendar' && (
+            <div className="p-4">
+              <div className="h-[600px]">
+                <VisitReportCalendar
+                  planEntries={availablePlanEntries}
+                  currentDate={new Date()}
+                  onDateClick={handleCalendarDateClick}
+                  viewMode={calendarViewMode}
+                  onViewModeChange={setCalendarViewMode}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* List View */}
+          {user.role === 'sales_engineer' && viewType === 'list' && (
+            <div className="p-4">
+              <div className="mb-3 flex justify-end">
+                <button
+                  onClick={() => {
+                    setSelectedPlanEntry(null);
+                    setSelectedDateForVisit(new Date());
+                    setFormData(prev => ({
+                      ...prev,
+                      dateOfVisit: formatDate(new Date()),
+                      companyName: '',
+                      cityArea: '',
+                      state: '',
+                      purposeOfMeeting: '',
+                      remarks: '',
+                    }));
+                    setSelectedPlanEntryId('');
+                    setShowVisitModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Unplanned Visit
+                </button>
+              </div>
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <div className="overflow-y-auto" style={{ maxHeight: '600px' }}>
+                  {availablePlanEntries.length === 0 ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">No planned visits available</p>
+                      <p className="text-xs mt-1">Click "Add Unplanned Visit" to create a visit report</p>
+                    </div>
+                  ) : (
+                    <table className="w-full text-xs">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Date</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Customer</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Purpose</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Location</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Time</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Status</th>
+                          <th className="px-3 py-2 text-left font-medium text-gray-700">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {availablePlanEntries
+                          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+                          .map((entry) => (
+                            <tr
+                              key={entry.id}
+                              className="hover:bg-gray-50 cursor-pointer transition-colors"
+                              onClick={() => handleCalendarDateClick(new Date(entry.date), entry)}
+                            >
+                              <td className="px-3 py-2">
+                                <div className="font-medium text-gray-900">{formatDate(new Date(entry.date))}</div>
+                                <div className="text-gray-500 text-[10px]">{entry.day}</div>
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="font-medium text-gray-900">{entry.customerName}</div>
+                                {entry.areaRegion && (
+                                  <div className="text-gray-500 text-[10px]">{entry.areaRegion}</div>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 text-gray-700">{entry.purpose}</td>
+                              <td className="px-3 py-2">
+                                <div className="text-gray-700">{entry.toLocation}</div>
+                                {entry.fromLocation && entry.fromLocation !== entry.toLocation && (
+                                  <div className="text-gray-500 text-[10px]">From: {entry.fromLocation}</div>
+                                )}
+                              </td>
+                              <td className="px-3 py-2">
+                                {entry.plannedCheckIn && (
+                                  <div className="text-gray-700">
+                                    {entry.plannedCheckIn}
+                                    {entry.plannedCheckOut && ` - ${entry.plannedCheckOut}`}
+                                  </div>
+                                )}
+                                {!entry.plannedCheckIn && (
+                                  <span className="text-gray-400 text-[10px]">Not set</span>
+                                )}
+                              </td>
+                              <td className="px-3 py-2">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                                  entry.status === 'completed'
+                                    ? 'bg-green-100 text-green-800'
+                                    : entry.status === 'in-progress'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                  {entry.status}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCalendarDateClick(new Date(entry.date), entry);
+                                  }}
+                                  className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                                >
+                                  Create Report
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
-                {selectedPlanEntryId && (
-                  <p className="text-xs text-blue-700 mt-2">
-                    Form will be pre-filled from the selected travel plan entry
-                  </p>
-                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+          {/* Visit Form Modal */}
+          {showVisitModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2">
+              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-4 border-b border-gray-200 sticky top-0 bg-white">
+                  <div className="flex justify-between items-center">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {selectedPlanEntry ? 'Create Visit Report from Planned Visit' : 'Create Unplanned Visit Report'}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowVisitModal(false);
+                        setSelectedDateForVisit(null);
+                        setSelectedPlanEntry(null);
+                      }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {selectedPlanEntry && (
+                    <p className="text-xs text-gray-600 mt-1">
+                      Pre-filled from: {selectedPlanEntry.customerName} on {formatDate(new Date(selectedPlanEntry.date))}
+                    </p>
+                  )}
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }} className="p-4 space-y-4">
+            {/* Link to Travel Plan Info */}
+            {selectedPlanEntry && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                  <span className="text-xs font-medium text-blue-900">
+                    Linked to planned visit: {selectedPlanEntry.customerName} on {formatDate(new Date(selectedPlanEntry.date))}
+                  </span>
+                </div>
               </div>
             )}
 
@@ -685,12 +924,17 @@ export default function NewVisitPage() {
 
             {/* Form Actions */}
             <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
-              <Link
-                href="/dashboard"
+              <button
+                type="button"
+                onClick={() => {
+                  setShowVisitModal(false);
+                  setSelectedDateForVisit(null);
+                  setSelectedPlanEntry(null);
+                }}
                 className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
               >
                 Cancel
-              </Link>
+              </button>
               <button
                 type="submit"
                 disabled={loading}
@@ -700,7 +944,9 @@ export default function NewVisitPage() {
               </button>
             </div>
           </form>
-        </div>
+              </div>
+            </div>
+          )}
 
         {/* Travel Plan Link Modal */}
         {showPlanLinkModal && (

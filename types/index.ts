@@ -118,8 +118,10 @@ export interface TravelPlan {
   id: string;
   salesEngineerId: string;
   teamLeaderId: string;
-  month: string; // e.g., "September"
-  year: number; // e.g., 2022
+  startDate: string; // YYYY-MM-DD format - start of plan period
+  endDate: string; // YYYY-MM-DD format - end of plan period
+  month: string; // e.g., "September" - kept for backward compatibility
+  year: number; // e.g., 2022 - kept for backward compatibility
   status: TravelPlanStatus;
   submittedAt?: string;
   approvedAt?: string;
@@ -132,5 +134,13 @@ export interface TravelPlan {
   commentedBy?: string; // Team leader who commented
   createdAt: string;
   updatedAt: string;
+}
+
+// System Configuration
+export interface SystemConfig {
+  id: string;
+  approvalRequired: boolean; // Whether travel plans require approval
+  updatedAt: string;
+  updatedBy: string;
 }
 

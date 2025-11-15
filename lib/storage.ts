@@ -1,4 +1,4 @@
-import { VisitReport, VisitEntry, PredefinedOption, TravelPlan, TravelPlanEntry, User } from '@/types';
+import { VisitReport, VisitEntry, PredefinedOption, TravelPlan, TravelPlanEntry, User, SystemConfig } from '@/types';
 
 const STORAGE_KEYS = {
   VISIT_REPORTS: 'visit_reports',
@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   TRAVEL_PLAN_ENTRIES: 'travel_plan_entries',
   LOCATIONS: 'locations',
   PURPOSE_OPTIONS: 'purpose_options',
+  SYSTEM_CONFIG: 'system_config',
 };
 
 export function getVisitReports(): VisitReport[] {
@@ -235,5 +236,51 @@ export function deleteTravelPlanEntry(entryId: string): boolean {
 export function getTravelPlanEntryById(entryId: string): TravelPlanEntry | null {
   const entries = getTravelPlanEntries();
   return entries.find((e) => e.id === entryId) || null;
+}
+
+// System Configuration Storage Functions
+export function getSystemConfig(): SystemConfig {
+  if (typeof window === 'undefined') {
+    return {
+      id: 'system-config',
+      approvalRequired: true, // Default to requiring approval
+      updatedAt: new Date().toISOString(),
+      updatedBy: 'system',
+    };
+  }
+  try {
+    const data = localStorage.getItem(STORAGE_KEYS.SYSTEM_CONFIG);
+    if (!data) {
+      // Return default config
+      const defaultConfig: SystemConfig = {
+        id: 'system-config',
+        approvalRequired: true,
+        updatedAt: new Date().toISOString(),
+        updatedBy: 'system',
+      };
+      saveSystemConfig(defaultConfig);
+      return defaultConfig;
+    }
+    return JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading system config:', error);
+    return {
+      id: 'system-config',
+      approvalRequired: true,
+      updatedAt: new Date().toISOString(),
+      updatedBy: 'system',
+    };
+  }
+}
+
+export function saveSystemConfig(config: SystemConfig): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    localStorage.setItem(STORAGE_KEYS.SYSTEM_CONFIG, JSON.stringify(config));
+    return true;
+  } catch (error) {
+    console.error('Error saving system config:', error);
+    return false;
+  }
 }
 
